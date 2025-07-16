@@ -16,8 +16,10 @@ jobs:
         with:
           bun-version: latest
 
-      - name: 📦 Install dependencies
-        run: bun install
+      - name: 📦 Install deps (force rebuild)
+        run: |
+          export BUN_DISABLE_NATIVE_MODULES=1
+          bun install --no-cache
 
       - name: 🛠️ Build Vite app
         run: bun run build
