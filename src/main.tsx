@@ -27,8 +27,8 @@ if (!rootElement.innerHTML) {
         withCssVariables
         withGlobalClasses
         theme={{
-          primaryColor: "orange",
-          defaultGradient: { from: "red", deg: 30, to: "orange" },
+          primaryColor: "indigo",
+          defaultGradient: { from: "indigo", deg: 30, to: "blue" },
         }}
         forceColorScheme="dark"
       >

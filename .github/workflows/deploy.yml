@@ -4,32 +4,20 @@ on:
   workflow_dispatch: # ✅ Manual trigger only
 
 jobs:
-  # build-deploy:
-  #   runs-on: ubuntu-latest
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - uses: oven-sh/setup-bun@v1
-  #       with:
-  #         bun-version: latest
-
-  #     - run: bun install
-  #     - run: bun run build
-
-  #     - name: Deploy app
-  #       uses: peaceiris/actions-gh-pages@v3
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         publish_dir: ./dist
-  update_tag:
+  build-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/publish-action@v0.3.0
-        env:
-          TAG_NAME: ${{ github.event.inputs.TAG_NAME || github.event.release.tag_name }}
+      - uses: oven-sh/setup-bun@v1
         with:
-          source-tag: ${{ env.TAG_NAME }}
+          bun-version: latest
+
+      - run: bun install
+      - run: bun run build
+
+      - name: Deploy app
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: ./dist
