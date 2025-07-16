@@ -31,11 +31,9 @@ function App() {
 
   const [method, setMethod] = useState(METHOD.get);
 
-  const { data, fetch, loading, status } = useFetcher(stringValue, {
+  const { data, fetch, loading } = useFetcher(stringValue, {
     method,
   });
-
-  console.log({ status });
 
   const { height } = useViewportSize();
 
