@@ -1,33 +1,35 @@
 name: Deploy
 
 on:
-  workflow_dispatch: # manual trigger only
+  workflow_dispatch: # ✅ Manual trigger only
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 📦 Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: 🧰 Setup Node.js (LTS)
         uses: actions/setup-node@v4
         with:
-          node-version: 20.14.0
+          node-version: 20.14.0 # ✅ use stable LTS version
 
-      - name: Install bun
+      - name: 🔧 Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        run: bun install
+      - name: 🧱 Clean + Install deps with Bun
+        run: bun install --no-cache
 
-      - name: Build app
-        run: bun run build
+      - name: 🛠️ Build app with Vite
+        run: |
+          echo "Running build..." 
+          bun run build
 
-      - name: Deploy to GitHub Pages
+      - name: 📤 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
