@@ -15,7 +15,6 @@ export default defineConfig({
     react(),
     // ...,
   ],
-  base: "/httpies_web/",
   resolve: {
     alias: {
       "~": path.resolve(__dirname, "src"),

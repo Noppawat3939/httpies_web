@@ -8,28 +8,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📦 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🧰 Setup Node.js (LTS)
+      - name: Setup Node.js (LTS)
         uses: actions/setup-node@v4
         with:
           node-version: 20.14.0 # ✅ use stable LTS version
 
-      - name: 🔧 Setup Bun
+      - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
+      - run: bun install
+      - run: bun index.ts
+      - run: bun run build
 
-      - name: 🧱 Clean + Install deps with Bun
-        run: bun install --no-cache
+      # - name: Clean & Install deps with Bun
+      #   run: bun install --no-cache
 
-      - name: 🛠️ Build app with Vite
-        run: |
-          echo "Running build..." 
-          bun run build
+      # - name: Build app
+      #   run: |
+      #     echo "Running build..."
+      #     bun run build
 
-      - name: 📤 Deploy to GitHub Pages
+      - name: Deploy app
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
