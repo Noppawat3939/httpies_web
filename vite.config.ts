@@ -7,6 +7,14 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig({
   base: "/httpies_web/",
+  build: {
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        fallback: "index.html", // we'll copy this later
+      },
+    },
+  },
   plugins: [
     tanstackRouter({
       target: "react",

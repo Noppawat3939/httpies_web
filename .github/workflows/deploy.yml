@@ -29,6 +29,9 @@ jobs:
       - name: Build using Bun
         run: NODE_ENV=production bun run build
 
+      - name: Copy index.html to 404.html (SPA fallback)
+        run: cp dist/index.html dist/404.html
+
       - name: Deploy to Github Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
