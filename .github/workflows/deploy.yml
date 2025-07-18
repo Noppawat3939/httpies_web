@@ -1,4 +1,4 @@
-name: Deploy
+name: Deployment
 
 on:
   workflow_dispatch: # ✅ Manual trigger only
@@ -11,11 +11,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Node.js
+          "echo installing node.js"
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Clean and install with npm (to fix native Rollup bindings)
+      - name: Clean and install with npm
         run: |
           rm -rf node_modules package-lock.json bun.lockb
           npm install
