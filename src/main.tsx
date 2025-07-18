@@ -32,7 +32,7 @@ if (!rootElement.innerHTML) {
         }}
         forceColorScheme="dark"
       >
-        <RouterProvider router={router} />
+        <RouterProvider router={router} basepath="/httpies_web" />
       </MantineProvider>
     </StrictMode>
   );
