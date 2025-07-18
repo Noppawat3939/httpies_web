@@ -10,14 +10,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v1
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Clean and install with npm (to fix native Rollup bindings)
+        run: |
+          rm -rf node_modules package-lock.json bun.lockb
+          npm install
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
 
-      - run: bun install
-      - run: bun run build
+      - name: Build using Bun
+        run: bun run build
 
-      - name: Deploy to Github pages
+      - name: Deploy to Github Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           publish_dir: ./dist
