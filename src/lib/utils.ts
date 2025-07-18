@@ -8,3 +8,7 @@ export function getHttpStatusColor(
 
   return "red";
 }
+
+export function numberFormat(value: number | bigint) {
+  return Intl.NumberFormat().format(value);
+}

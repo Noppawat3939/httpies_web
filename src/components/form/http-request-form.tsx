@@ -3,24 +3,45 @@ import {
   Select,
   TextInput,
   type SelectProps,
-  JsonInput,
   ScrollArea,
   Box,
   Button,
   Text,
   Stack,
+  Tabs,
 } from "@mantine/core";
 import { useInputState, useViewportSize } from "@mantine/hooks";
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useFetcher } from "~/hooks";
 import { HTTPS_METHOD, HTTP_STATUS_MESSAGE } from "~/lib/constants";
-import { getHttpStatusColor } from "~/lib/utils";
+import { getHttpStatusColor, numberFormat } from "~/lib/utils";
+import { prettyPrintJson } from "pretty-print-json";
+import { ParamEditor } from "~/components/editors";
 
-const testApi = "https://jsonplaceholder.typicode.com/photos";
+import "~/styles/pretty-json.css";
+import type { Param } from "~/components/editors/param-editor";
+
+const testApi = "https://jsonplaceholder.typicode.com/users";
+
+const httpConfigs = {
+  params: "params",
+  headers: "headers",
+  auth: "auth",
+  body: "body",
+};
+
+const PARAM_EDITOR_HEIGHT = 44; //px
+const MAGIC_NUMBER = 200; //px
+
+const initalParam = { key: "", value: "" } satisfies Param;
 
 export default function HttpRequestForm() {
   const [method, setMethod] = useInputState(HTTPS_METHOD.get);
   const [baseUrl, setBaseUrl] = useInputState(testApi);
+
+  const [httpConfigTab, setHttpConfigTab] =
+    useState<keyof typeof httpConfigs>("params");
+  const [params, setParams] = useState<Param[]>([initalParam]);
 
   const { height } = useViewportSize();
 
@@ -59,6 +80,45 @@ export default function HttpRequestForm() {
             onChange={setBaseUrl}
           />
         </Flex>
+        <Flex>
+          <Tabs
+            value={httpConfigTab}
+            styles={{ tabLabel: { fontSize: 12, textTransform: "capitalize" } }}
+            w="100%"
+            onChange={(value) =>
+              setHttpConfigTab(value as typeof httpConfigTab)
+            }
+          >
+            <Tabs.List grow justify="space-evenly">
+              {Object.values(httpConfigs).map((config) => (
+                <Tabs.Tab value={config} key={config}>
+                  {config}
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+          </Tabs>
+        </Flex>
+        {httpConfigTab === httpConfigs.params && (
+          <ParamEditor params={params} onChange={setParams} />
+        )}
+        <ScrollArea
+          type="auto"
+          h={
+            height -
+            46 -
+            76 -
+            MAGIC_NUMBER -
+            (params.length ? params.length * PARAM_EDITOR_HEIGHT : 0)
+          }
+        >
+          <pre
+            className="pretty-json"
+            style={{ fontSize: 12, whiteSpace: "break-spaces" }}
+            dangerouslySetInnerHTML={{
+              __html: data ? prettyPrintJson.toHtml(data) : "",
+            }}
+          />
+        </ScrollArea>
         <Flex justify="end" gap={4}>
           {status && (
             <Text
@@ -70,16 +130,8 @@ export default function HttpRequestForm() {
               {`${status} ${HTTP_STATUS_MESSAGE[status]}`}
             </Text>
           )}
-          <Text size="xs">{`${duration || 0}ms`}</Text>
+          <Text size="xs">{`${numberFormat(duration || 0)} ms`}</Text>
         </Flex>
-        <ScrollArea type="auto" h={height - 46 - 76 - 100}>
-          <JsonInput
-            autosize
-            minRows={3}
-            placeholder="Response"
-            value={data ? JSON.stringify(data) : undefined}
-          />
-        </ScrollArea>
       </Stack>
 
       <Box pos="absolute" bottom={0} w={"100%"} p={"lg"} left={0}>
