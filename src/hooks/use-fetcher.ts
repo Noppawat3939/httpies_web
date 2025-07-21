@@ -1,8 +1,9 @@
 import { useState } from "react";
+import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 
 export default function useFetcher<TResponse>(
   url: string,
-  options?: RequestInit
+  options?: AxiosRequestConfig
 ) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<TResponse>();
@@ -11,28 +12,31 @@ export default function useFetcher<TResponse>(
     status: number | null;
   }>({ duration: 0, status: null });
 
-  let end: number, status: number;
-
   async function fetchData() {
     const start = performance.now();
     setLoading(true);
 
-    const response = await fetch(url, { ...options });
-    status = response.status;
+    try {
+      const response: AxiosResponse<TResponse> = await axios({
+        url,
+        method: "get", // default to GET; override via `options`
+        ...options,
+      });
 
-    end = performance.now();
-    status = response.status;
-
-    if (response.ok) {
-      const contentType = response.headers.get("content-type") ?? "";
-      const result = contentType?.includes("application/json")
-        ? await response.json()
-        : await response.text();
-
-      setData(result);
+      const end = performance.now();
+      setData(response.data);
+      setInfos({
+        duration: Math.round(end - start),
+        status: response.status,
+      });
+    } catch (error: any) {
+      const end = performance.now();
+      setInfos({
+        duration: Math.round(end - start),
+        status: error?.response?.status ?? 0,
+      });
+      console.error("Axios fetch error:", error);
     }
-
-    setInfos({ duration: Math.round(end - start), status });
 
     setLoading(false);
   }

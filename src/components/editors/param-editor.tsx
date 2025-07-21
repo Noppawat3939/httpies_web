@@ -1,9 +1,18 @@
-import { Box, Button, Group, Stack, TextInput } from "@mantine/core";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Flex,
+  Group,
+  Stack,
+  TextInput,
+} from "@mantine/core";
+import { Plus, Trash } from "lucide-react";
 import { useCallback } from "react";
 
-export type Param = { key: string; value: string };
+export type Param = { key: string; value: string; checked: boolean };
 
-const initial = { key: "", value: "" } satisfies Param;
+const initial = { key: "", value: "", checked: false } satisfies Param;
 
 type ParamEditorProps = {
   params: Param[];
@@ -28,9 +37,31 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
   );
 
   const handleParamChange = useCallback(
-    (index: number, filed: keyof Param, value: string) => {
+    (index: number, field: keyof Param, value: string | boolean) => {
       const updated = [...params];
-      updated[index][filed] = value;
+
+      const param = { ...updated[index], [field]: value };
+
+      // auto checked if have key and value
+      if (
+        field !== "checked" &&
+        !param.checked &&
+        (!!param.key.trim() || !!param.value.trim())
+      ) {
+        param.checked = true;
+      }
+
+      // auto un-check if empty key and value
+      if (
+        field !== "checked" &&
+        param.checked &&
+        !param.key.trim() &&
+        !param.value.trim()
+      ) {
+        param.checked = false;
+      }
+
+      updated[index] = param;
 
       updateParams(updated);
     },
@@ -39,21 +70,40 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
 
   return (
     <Box>
+      <Flex justify="end" mb={10}>
+        <Button
+          disabled={params.length === 0}
+          onClick={() => updateParams([])}
+          color="red"
+          size="xs"
+          variant="outline"
+        >
+          {"clear"}
+        </Button>
+      </Flex>
       <Stack gap={8}>
         {params.map((param, index) => (
           <Group gap={5} key={index} align="center">
-            <TextInput
-              placeholder="Key"
-              flex={0.4}
-              size="sm"
-              value={param.key}
-              onChange={(e) =>
-                handleParamChange(index, "key", e.currentTarget.value)
-              }
-            />
+            <Flex align="center" gap={4} flex={0.4}>
+              <Checkbox
+                checked={param.checked}
+                onChange={(e) =>
+                  handleParamChange(index, "checked", e.currentTarget.checked)
+                }
+              />
+              <TextInput
+                placeholder="Key"
+                size="sm"
+                value={param.key}
+                onChange={(e) =>
+                  handleParamChange(index, "key", e.currentTarget.value)
+                }
+              />
+            </Flex>
             <TextInput
               placeholder="Value"
               size="sm"
+              disabled={!params[index].checked}
               value={param.value}
               onChange={(e) =>
                 handleParamChange(index, "value", e.currentTarget.value)
@@ -67,12 +117,13 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
               disabled={!index}
               onClick={() => removeParam(index)}
             >
-              rm
+              <Trash size={14} />
             </Button>
           </Group>
         ))}
         <Button radius={20} variant="outline" onClick={addParam} fullWidth>
-          + Add param
+          <Plus size={12} />
+          {"Add param"}
         </Button>
       </Stack>
     </Box>

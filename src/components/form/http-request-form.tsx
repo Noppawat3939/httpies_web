@@ -11,10 +11,14 @@ import {
   Tabs,
 } from "@mantine/core";
 import { useInputState, useViewportSize } from "@mantine/hooks";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, useTransition } from "react";
 import { useFetcher } from "~/hooks";
 import { HTTPS_METHOD, HTTP_STATUS_MESSAGE } from "~/lib/constants";
-import { getHttpStatusColor, numberFormat } from "~/lib/utils";
+import {
+  entriesQueryParams,
+  getHttpStatusColor,
+  numberFormat,
+} from "~/lib/utils";
 import { prettyPrintJson } from "pretty-print-json";
 import { ParamEditor } from "~/components/editors";
 
@@ -33,11 +37,13 @@ const httpConfigs = {
 const PARAM_EDITOR_HEIGHT = 44; //px
 const MAGIC_NUMBER = 200; //px
 
-const initalParam = { key: "", value: "" } satisfies Param;
+const initalParam = { key: "", value: "", checked: false } satisfies Param;
 
 export default function HttpRequestForm() {
   const [method, setMethod] = useInputState(HTTPS_METHOD.get);
   const [baseUrl, setBaseUrl] = useInputState(testApi);
+
+  const [pending, startTransition] = useTransition();
 
   const [httpConfigTab, setHttpConfigTab] =
     useState<keyof typeof httpConfigs>("params");
@@ -47,9 +53,8 @@ export default function HttpRequestForm() {
 
   const { data, fetch, loading, duration, status } = useFetcher(baseUrl, {
     method,
-    headers: {
-      ["Content-type"]: "application/json",
-    },
+    headers: { ["Content-type"]: "application/json" },
+    params: entriesQueryParams(params),
   });
 
   const methodOptions = useMemo<SelectProps["data"]>(
@@ -136,13 +141,13 @@ export default function HttpRequestForm() {
 
       <Box pos="absolute" bottom={0} w={"100%"} p={"lg"} left={0}>
         <Button
-          loading={loading}
-          onClick={() => fetch()}
+          loading={loading || pending}
+          onClick={() => startTransition(fetch)}
           radius={20}
           fullWidth
           variant="gradient"
         >
-          Send
+          {"Send"}
         </Button>
       </Box>
     </Fragment>
