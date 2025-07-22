@@ -64,3 +64,20 @@ export const HTTP_STATUS_MESSAGE: Record<number, string> = {
   502: "Bad Gateway",
   503: "Service Unavailable",
 };
+
+export const isDevelop = import.meta.env.DEV;
+
+export const HTTP_HEADERS_OPTIONS = [
+  "Accept",
+  "Authorization",
+  "Content-Type",
+  "Content-Length",
+  "Cache-Control",
+  "Connection",
+  "Cookie",
+  "Host",
+  "Origin",
+  "Referer",
+  "User-Agent",
+  "X-Requested-With",
+] as const;

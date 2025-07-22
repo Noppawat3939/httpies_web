@@ -11,21 +11,28 @@ import {
   Tabs,
 } from "@mantine/core";
 import { useInputState, useViewportSize } from "@mantine/hooks";
-import { Fragment, useMemo, useState, useTransition } from "react";
+import {
+  Fragment,
+  useMemo,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { useFetcher } from "~/hooks";
-import { HTTPS_METHOD, HTTP_STATUS_MESSAGE } from "~/lib/constants";
+import { HTTPS_METHOD, HTTP_STATUS_MESSAGE, isDevelop } from "~/lib/constants";
 import {
   entriesQueryParams,
   getHttpStatusColor,
   numberFormat,
 } from "~/lib/utils";
 import { prettyPrintJson } from "pretty-print-json";
-import { ParamEditor } from "~/components/editors";
+import { HeadersEditor, ParamEditor } from "~/components/editors";
 
 import "~/styles/pretty-json.css";
 import type { Param } from "~/components/editors/param-editor";
 
-const testApi = "https://jsonplaceholder.typicode.com/users";
+// Apply this url on develop mode
+const testApi = isDevelop ? "https://jsonplaceholder.typicode.com/users" : "";
 
 const httpConfigs = {
   params: "params",
@@ -33,6 +40,8 @@ const httpConfigs = {
   auth: "auth",
   body: "body",
 };
+
+type HttpConfigs = keyof typeof httpConfigs;
 
 const PARAM_EDITOR_HEIGHT = 44; //px
 const MAGIC_NUMBER = 200; //px
@@ -45,8 +54,7 @@ export default function HttpRequestForm() {
 
   const [pending, startTransition] = useTransition();
 
-  const [httpConfigTab, setHttpConfigTab] =
-    useState<keyof typeof httpConfigs>("params");
+  const [httpConfigTab, setHttpConfigTab] = useState<HttpConfigs>("params");
   const [params, setParams] = useState<Param[]>([initalParam]);
 
   const { height } = useViewportSize();
@@ -65,6 +73,13 @@ export default function HttpRequestForm() {
       })),
     []
   );
+
+  const renderEditor = {
+    params: <ParamEditor params={params} onChange={setParams} />,
+    headers: <HeadersEditor />,
+    body: <ParamEditor params={params} onChange={setParams} />,
+    auth: <ParamEditor params={params} onChange={setParams} />,
+  } as Record<HttpConfigs, ReactNode>;
 
   return (
     <Fragment>
@@ -103,9 +118,9 @@ export default function HttpRequestForm() {
             </Tabs.List>
           </Tabs>
         </Flex>
-        {httpConfigTab === httpConfigs.params && (
-          <ParamEditor params={params} onChange={setParams} />
-        )}
+
+        {renderEditor[httpConfigTab]}
+
         <ScrollArea
           type="auto"
           h={
