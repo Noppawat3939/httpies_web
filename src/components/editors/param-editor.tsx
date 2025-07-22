@@ -5,6 +5,7 @@ import {
   Flex,
   Group,
   Stack,
+  Text,
   TextInput,
 } from "@mantine/core";
 import { Plus, Trash } from "lucide-react";
@@ -71,15 +72,14 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
   return (
     <Box>
       <Flex justify="end" mb={10}>
-        <Button
-          disabled={params.length === 0}
-          onClick={() => updateParams([])}
-          color="red"
+        <Text
+          style={{ cursor: params.length > 1 ? "pointer" : "default" }}
           size="xs"
-          variant="outline"
+          onClick={() => (params.length > 1 ? updateParams([initial]) : null)}
+          c={params.length > 1 ? "red" : "dark"}
         >
           {"clear"}
-        </Button>
+        </Text>
       </Flex>
       <Stack gap={8}>
         {params.map((param, index) => (
@@ -95,6 +95,7 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
                 placeholder="Key"
                 size="sm"
                 value={param.key}
+                styles={{ input: { color: "orange" } }}
                 onChange={(e) =>
                   handleParamChange(index, "key", e.currentTarget.value)
                 }
