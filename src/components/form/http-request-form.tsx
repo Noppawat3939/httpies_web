@@ -30,6 +30,8 @@ import { HeadersEditor, ParamEditor } from "~/components/editors";
 
 import "~/styles/pretty-json.css";
 import type { Param } from "~/components/editors/param-editor";
+import type { Header } from "~/components/editors/headers-editor";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 
 // Apply this url on develop mode
 const testApi = isDevelop ? "https://jsonplaceholder.typicode.com/users" : "";
@@ -47,15 +49,22 @@ const PARAM_EDITOR_HEIGHT = 44; //px
 const MAGIC_NUMBER = 200; //px
 
 const initalParam = { key: "", value: "", checked: false } satisfies Param;
+const initalHeader = { key: "", value: "", checked: false } satisfies Header;
 
 export default function HttpRequestForm() {
+  const { tab = "params" } = useSearch({ from: "/app" }) satisfies {
+    tab: HttpConfigs;
+  };
+  const navigation = useNavigate();
+
   const [method, setMethod] = useInputState(HTTPS_METHOD.get);
   const [baseUrl, setBaseUrl] = useInputState(testApi);
 
   const [pending, startTransition] = useTransition();
 
-  const [httpConfigTab, setHttpConfigTab] = useState<HttpConfigs>("params");
+  const [httpConfigTab, setHttpConfigTab] = useState<HttpConfigs>(tab);
   const [params, setParams] = useState<Param[]>([initalParam]);
+  const [headers, setHeaders] = useState<Header[]>([initalHeader]);
 
   const { height } = useViewportSize();
 
@@ -76,7 +85,7 @@ export default function HttpRequestForm() {
 
   const renderEditor = {
     params: <ParamEditor params={params} onChange={setParams} />,
-    headers: <HeadersEditor />,
+    headers: <HeadersEditor headers={headers} onChange={setHeaders} />,
     body: <ParamEditor params={params} onChange={setParams} />,
     auth: <ParamEditor params={params} onChange={setParams} />,
   } as Record<HttpConfigs, ReactNode>;
@@ -105,9 +114,11 @@ export default function HttpRequestForm() {
             value={httpConfigTab}
             styles={{ tabLabel: { fontSize: 12, textTransform: "capitalize" } }}
             w="100%"
-            onChange={(value) =>
-              setHttpConfigTab(value as typeof httpConfigTab)
-            }
+            onChange={(value) => {
+              navigation({ to: "/app", search: { tab: value } });
+
+              setHttpConfigTab(value as typeof httpConfigTab);
+            }}
           >
             <Tabs.List grow justify="space-evenly">
               {Object.values(httpConfigs).map((config) => (

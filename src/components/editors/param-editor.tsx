@@ -82,11 +82,11 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
         </Text>
       </Flex>
       <Stack gap={8}>
-        {params.map((param, index) => (
+        {params.map(({ key, value, checked }, index) => (
           <Group gap={5} key={index} align="center">
             <Flex align="center" gap={4} flex={0.4}>
               <Checkbox
-                checked={param.checked}
+                checked={checked}
                 onChange={(e) =>
                   handleParamChange(index, "checked", e.currentTarget.checked)
                 }
@@ -94,7 +94,7 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
               <TextInput
                 placeholder="Key"
                 size="sm"
-                value={param.key}
+                value={key}
                 styles={{ input: { color: "orange" } }}
                 onChange={(e) =>
                   handleParamChange(index, "key", e.currentTarget.value)
@@ -105,7 +105,7 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
               placeholder="Value"
               size="sm"
               disabled={!params[index].checked}
-              value={param.value}
+              value={value}
               onChange={(e) =>
                 handleParamChange(index, "value", e.currentTarget.value)
               }
