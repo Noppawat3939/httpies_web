@@ -11,17 +11,30 @@ import {
   Tabs,
 } from "@mantine/core";
 import { useInputState, useViewportSize } from "@mantine/hooks";
-import { Fragment, useMemo, useState } from "react";
+import {
+  Fragment,
+  useMemo,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { useFetcher } from "~/hooks";
-import { HTTPS_METHOD, HTTP_STATUS_MESSAGE } from "~/lib/constants";
-import { getHttpStatusColor, numberFormat } from "~/lib/utils";
+import { HTTPS_METHOD, HTTP_STATUS_MESSAGE, isDevelop } from "~/lib/constants";
+import {
+  entriesQueryParams,
+  getHttpStatusColor,
+  numberFormat,
+} from "~/lib/utils";
 import { prettyPrintJson } from "pretty-print-json";
-import { ParamEditor } from "~/components/editors";
+import { HeadersEditor, ParamEditor } from "~/components/editors";
 
 import "~/styles/pretty-json.css";
 import type { Param } from "~/components/editors/param-editor";
+import type { Header } from "~/components/editors/headers-editor";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 
-const testApi = "https://jsonplaceholder.typicode.com/users";
+// Apply this url on develop mode
+const testApi = isDevelop ? "https://jsonplaceholder.typicode.com/users" : "";
 
 const httpConfigs = {
   params: "params",
@@ -30,26 +43,35 @@ const httpConfigs = {
   body: "body",
 };
 
+type HttpConfigs = keyof typeof httpConfigs;
+
 const PARAM_EDITOR_HEIGHT = 44; //px
 const MAGIC_NUMBER = 200; //px
 
-const initalParam = { key: "", value: "" } satisfies Param;
+const initalParam = { key: "", value: "", checked: false } satisfies Param;
+const initalHeader = { key: "", value: "", checked: false } satisfies Header;
 
 export default function HttpRequestForm() {
+  const { tab = "params" } = useSearch({ from: "/app" }) satisfies {
+    tab: HttpConfigs;
+  };
+  const navigation = useNavigate();
+
   const [method, setMethod] = useInputState(HTTPS_METHOD.get);
   const [baseUrl, setBaseUrl] = useInputState(testApi);
 
-  const [httpConfigTab, setHttpConfigTab] =
-    useState<keyof typeof httpConfigs>("params");
+  const [pending, startTransition] = useTransition();
+
+  const [httpConfigTab, setHttpConfigTab] = useState<HttpConfigs>(tab);
   const [params, setParams] = useState<Param[]>([initalParam]);
+  const [headers, setHeaders] = useState<Header[]>([initalHeader]);
 
   const { height } = useViewportSize();
 
   const { data, fetch, loading, duration, status } = useFetcher(baseUrl, {
     method,
-    headers: {
-      ["Content-type"]: "application/json",
-    },
+    headers: entriesQueryParams(headers),
+    params: entriesQueryParams(params),
   });
 
   const methodOptions = useMemo<SelectProps["data"]>(
@@ -60,6 +82,13 @@ export default function HttpRequestForm() {
       })),
     []
   );
+
+  const renderEditor = {
+    params: <ParamEditor params={params} onChange={setParams} />,
+    headers: <HeadersEditor headers={headers} onChange={setHeaders} />,
+    body: <ParamEditor params={params} onChange={setParams} />,
+    auth: <ParamEditor params={params} onChange={setParams} />,
+  } as Record<HttpConfigs, ReactNode>;
 
   return (
     <Fragment>
@@ -85,9 +114,11 @@ export default function HttpRequestForm() {
             value={httpConfigTab}
             styles={{ tabLabel: { fontSize: 12, textTransform: "capitalize" } }}
             w="100%"
-            onChange={(value) =>
-              setHttpConfigTab(value as typeof httpConfigTab)
-            }
+            onChange={(value) => {
+              navigation({ to: "/app", search: { tab: value } });
+
+              setHttpConfigTab(value as typeof httpConfigTab);
+            }}
           >
             <Tabs.List grow justify="space-evenly">
               {Object.values(httpConfigs).map((config) => (
@@ -98,9 +129,9 @@ export default function HttpRequestForm() {
             </Tabs.List>
           </Tabs>
         </Flex>
-        {httpConfigTab === httpConfigs.params && (
-          <ParamEditor params={params} onChange={setParams} />
-        )}
+
+        {renderEditor[httpConfigTab]}
+
         <ScrollArea
           type="auto"
           h={
@@ -136,13 +167,13 @@ export default function HttpRequestForm() {
 
       <Box pos="absolute" bottom={0} w={"100%"} p={"lg"} left={0}>
         <Button
-          loading={loading}
-          onClick={() => fetch()}
+          loading={loading || pending}
+          onClick={() => startTransition(fetch)}
           radius={20}
           fullWidth
           variant="gradient"
         >
-          Send
+          {"Send"}
         </Button>
       </Box>
     </Fragment>
