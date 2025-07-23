@@ -1,12 +1,17 @@
 import {
   Autocomplete,
+  Box,
   Button,
   Checkbox,
   Flex,
+  Group,
   Stack,
+  Text,
   TextInput,
 } from "@mantine/core";
-import { Group } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
+import { useEditHeaders } from "~/hooks";
+import { HTTP_HEADERS_OPTIONS } from "~/lib/constants";
 
 export type Header = { key: string; value: string; checked: boolean };
 
@@ -15,34 +20,73 @@ type HeadersEditorProps = {
   onChange: (newHeaders: Header[]) => void;
 };
 
-export default function HeadersEditor({ headers }: HeadersEditorProps) {
+export default function HeadersEditor({
+  headers,
+  onChange,
+}: HeadersEditorProps) {
+  const { add, onValueChange, remove, clear, hasValue } = useEditHeaders(
+    headers,
+    onChange
+  );
+
   return (
-    <Stack gap={8}>
-      {headers.map(({ checked, key, value }, index) => (
-        <Group key={index}>
-          <Flex align="center" gap={4} flex={0.4}>
-            {/* <Checkbox checked={checked} key={`c-${index}`} /> */}
-            <Autocomplete
-              placeholder="Header Key"
+    <Box>
+      <Flex justify="end" mb={10}>
+        <Text
+          size="xs"
+          onClick={clear}
+          c={hasValue ? "red" : "dark"}
+          style={{ cursor: hasValue ? "pointer" : "default" }}
+        >
+          {"clear"}
+        </Text>
+      </Flex>
+
+      <Stack gap={8}>
+        {headers.map((h, index) => (
+          <Group key={index} gap={5} align="center">
+            <Flex align="center" gap={4} flex={0.4}>
+              <Checkbox
+                checked={h.checked}
+                onChange={({ currentTarget: { checked } }) =>
+                  onValueChange(index, "checked", checked)
+                }
+              />
+              <Autocomplete
+                value={h.key}
+                placeholder="Key"
+                size="sm"
+                styles={{ input: { color: "orange", fontWeight: 600 } }}
+                data={HTTP_HEADERS_OPTIONS}
+                onChange={(value) => onValueChange(index, "key", value.trim())}
+              />
+            </Flex>
+            <TextInput
+              placeholder="Value"
               size="sm"
-              value={key}
-              data={["React", "Angular", "Vue", "Svelte"]}
+              disabled={!headers[index].checked}
+              value={h.value}
+              onChange={({ currentTarget: { value } }) =>
+                onValueChange(index, "value", value)
+              }
+              flex={0.6}
             />
-          </Flex>
-          <TextInput
-            placeholder="Header Value"
-            size="sm"
-            value={value}
-            flex={0.6}
-          />
-          <Button color="red" variant="outline" size="xs" disabled={!index}>
-            rm
-          </Button>
-        </Group>
-      ))}
-      <Button radius={20} variant="outline" fullWidth>
-        Add Header
-      </Button>
-    </Stack>
+            <Button
+              color="red"
+              onClick={remove.bind(null, index)}
+              variant="outline"
+              size="xs"
+              disabled={!index}
+            >
+              <Trash size={14} />
+            </Button>
+          </Group>
+        ))}
+        <Button radius={20} variant="outline" onClick={add} fullWidth>
+          <Plus size={12} />
+          {"Add Header"}
+        </Button>
+      </Stack>
+    </Box>
   );
 }

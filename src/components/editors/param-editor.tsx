@@ -9,11 +9,9 @@ import {
   TextInput,
 } from "@mantine/core";
 import { Plus, Trash } from "lucide-react";
-import { useCallback } from "react";
+import { useEditParams } from "~/hooks";
 
 export type Param = { key: string; value: string; checked: boolean };
-
-const initial = { key: "", value: "", checked: false } satisfies Param;
 
 type ParamEditorProps = {
   params: Param[];
@@ -21,83 +19,40 @@ type ParamEditorProps = {
 };
 
 export default function ParamEditor({ params, onChange }: ParamEditorProps) {
-  const updateParams = (newParams: Param[]) => onChange(newParams);
-
-  const addParam = useCallback(
-    () => updateParams([...params, initial]),
-    [params]
-  );
-
-  const removeParam = useCallback(
-    (removeIndex: number) => {
-      const newParams = params.filter((_, i) => i !== removeIndex);
-
-      updateParams(newParams.length ? newParams : [initial]);
-    },
-    [params]
-  );
-
-  const handleParamChange = useCallback(
-    (index: number, field: keyof Param, value: string | boolean) => {
-      const updated = [...params];
-
-      const param = { ...updated[index], [field]: value };
-
-      // auto checked if have key and value
-      if (
-        field !== "checked" &&
-        !param.checked &&
-        (!!param.key.trim() || !!param.value.trim())
-      ) {
-        param.checked = true;
-      }
-
-      // auto un-check if empty key and value
-      if (
-        field !== "checked" &&
-        param.checked &&
-        !param.key.trim() &&
-        !param.value.trim()
-      ) {
-        param.checked = false;
-      }
-
-      updated[index] = param;
-
-      updateParams(updated);
-    },
-    [params]
+  const { onValueChange, add, remove, clear, hasValue } = useEditParams(
+    params,
+    onChange
   );
 
   return (
     <Box>
       <Flex justify="end" mb={10}>
         <Text
-          style={{ cursor: params.length > 1 ? "pointer" : "default" }}
+          style={{ cursor: hasValue ? "pointer" : "default" }}
           size="xs"
-          onClick={() => (params.length > 1 ? updateParams([initial]) : null)}
-          c={params.length > 1 ? "red" : "dark"}
+          onClick={clear}
+          c={hasValue ? "red" : "dark"}
         >
           {"clear"}
         </Text>
       </Flex>
       <Stack gap={8}>
-        {params.map(({ key, value, checked }, index) => (
+        {params.map((p, index) => (
           <Group gap={5} key={index} align="center">
             <Flex align="center" gap={4} flex={0.4}>
               <Checkbox
-                checked={checked}
-                onChange={(e) =>
-                  handleParamChange(index, "checked", e.currentTarget.checked)
+                checked={p.checked}
+                onChange={({ currentTarget: { checked } }) =>
+                  onValueChange(index, "checked", checked)
                 }
               />
               <TextInput
                 placeholder="Key"
                 size="sm"
-                value={key}
-                styles={{ input: { color: "orange" } }}
-                onChange={(e) =>
-                  handleParamChange(index, "key", e.currentTarget.value)
+                value={p.key}
+                styles={{ input: { color: "orange", fontWeight: 600 } }}
+                onChange={({ currentTarget: { value } }) =>
+                  onValueChange(index, "key", value)
                 }
               />
             </Flex>
@@ -105,9 +60,9 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
               placeholder="Value"
               size="sm"
               disabled={!params[index].checked}
-              value={value}
-              onChange={(e) =>
-                handleParamChange(index, "value", e.currentTarget.value)
+              value={p.value}
+              onChange={({ currentTarget: { value } }) =>
+                onValueChange(index, "value", value)
               }
               flex={0.6}
             />
@@ -116,13 +71,13 @@ export default function ParamEditor({ params, onChange }: ParamEditorProps) {
               variant="outline"
               size="xs"
               disabled={!index}
-              onClick={() => removeParam(index)}
+              onClick={remove.bind(null, index)}
             >
               <Trash size={14} />
             </Button>
           </Group>
         ))}
-        <Button radius={20} variant="outline" onClick={addParam} fullWidth>
+        <Button radius={20} variant="outline" onClick={add} fullWidth>
           <Plus size={12} />
           {"Add param"}
         </Button>

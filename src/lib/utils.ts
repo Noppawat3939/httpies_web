@@ -1,4 +1,5 @@
 import type { DefaultMantineColor, StyleProp } from "@mantine/core";
+import type { Header } from "~/components/editors/headers-editor";
 import type { Param } from "~/components/editors/param-editor";
 
 export function getHttpStatusColor(
@@ -20,8 +21,8 @@ export function numberFormat(value: number | bigint) {
  * @example entriesQueryParams([{key: "page": value: 1, checked: true}, {key: "limit", value: 100, cheeck: true}])
  * @returns `{ page: 1, limit: 100 }`
  */
-export function entriesQueryParams(params: Param[]) {
-  const cleaned = params.filter(
+export function entriesQueryParams(items: (Param & Header)[]) {
+  const cleaned = items.filter(
     (param) => param.checked && param.key.trim() && param.value.trim()
   );
 

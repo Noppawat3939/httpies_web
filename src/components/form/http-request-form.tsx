@@ -70,7 +70,7 @@ export default function HttpRequestForm() {
 
   const { data, fetch, loading, duration, status } = useFetcher(baseUrl, {
     method,
-    headers: { ["Content-type"]: "application/json" },
+    headers: entriesQueryParams(headers),
     params: entriesQueryParams(params),
   });
 
